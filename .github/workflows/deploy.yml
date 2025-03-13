@@ -17,4 +17,4 @@ jobs:
       - name: Push to hub
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
-        run: git push https://sanslab22:$HF_TOKEN@huggingface.co/spaces/sanslab22/TestGithubActionsDeployment main
+        run: git push --force https://sanslab22:$HF_TOKEN@huggingface.co/spaces/sanslab22/TestGithubActionsDeployment main
