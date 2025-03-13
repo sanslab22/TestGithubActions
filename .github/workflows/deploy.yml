@@ -1,13 +1,11 @@
 name: Deploy to Vercel
-
 on:
   push:
     branches:
-      - vercel-connection-test  # This will trigger deployment on push to the 'main' branch
+      - vercel-connection-test
   pull_request:
     branches:
-      - vercel-connection-test  # Also trigger on pull requests targeting 'main'
-
+      - vercel-connection-test
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -15,24 +13,18 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v2
-
     - name: Set up Python
       uses: actions/setup-python@v2
       with:
         python-version: '3.x'
-
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
-
-    - name: Vercel CLI Login
+    - name: Deploy to Vercel
       uses: amondnet/vercel-action@v20
       with:
         vercel-token: ${{ secrets.VERCEL_TOKEN }}
         vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
         vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
-
-    - name: Deploy to Vercel
-      run: |
-        vercel --prod
+        vercel-args: '--prod'  # Add this line to deploy to production
