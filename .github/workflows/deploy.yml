@@ -1,20 +1,38 @@
-name: Sync to Hugging Face hub
+name: Deploy to Vercel
+
 on:
   push:
-    branches: [main]
-
-  # to run this workflow manually from the Actions tab
-  workflow_dispatch:
+    branches:
+      - vercel-connection-test  # This will trigger deployment on push to the 'main' branch
+  pull_request:
+    branches:
+      - vercel-connection-test  # Also trigger on pull requests targeting 'main'
 
 jobs:
-  sync-to-hub:
+  deploy:
     runs-on: ubuntu-latest
+    
     steps:
-      - uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-          lfs: true
-      - name: Push to hub
-        env:
-          HF_TOKEN: ${{ secrets.HF_TOKEN }}
-        run: git push --force https://sanslab22:$HF_TOKEN@huggingface.co/spaces/sanslab22/TestGithubActionsDeployment main
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.x'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    - name: Vercel CLI Login
+      uses: amondnet/vercel-action@v20
+      with:
+        vercel-token: ${{ secrets.VERCEL_TOKEN }}
+        vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+        vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+
+    - name: Deploy to Vercel
+      run: |
+        vercel --prod
