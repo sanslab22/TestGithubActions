@@ -1,9 +1,6 @@
-name: Deploy to Vercel
+name: Deploy to Vercel (New Project)
 on:
   push:
-    branches:
-      - vercel-connection-test
-  pull_request:
     branches:
       - vercel-connection-test
 jobs:
@@ -13,18 +10,39 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v2
+    
+    - name: Set up Node.js
+      uses: actions/setup-node@v2
+      with:
+        node-version: '18'
+    
     - name: Set up Python
       uses: actions/setup-python@v2
       with:
         python-version: '3.x'
+    
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
-    - name: Deploy to Vercel
-      uses: amondnet/vercel-action@v20
-      with:
-        vercel-token: ${{ secrets.VERCEL_TOKEN }}
-        vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
-        vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
-        vercel-args: '--prod'  # Add this line to deploy to production
+    
+    - name: Install Vercel CLI
+      run: npm install -g vercel
+    
+    - name: Generate unique project name
+      id: project-name
+      run: echo "::set-output name=name::my-project-$(date +%s)"
+    
+    - name: Create and deploy to Vercel
+      run: |
+        # Create a vercel.json file if you don't have one
+        echo '{
+          "name": "${{ steps.project-name.outputs.name }}",
+          "framework": "python"  # or your specific framework
+        }' > vercel.json
+        
+        # Deploy to Vercel with new project creation
+        vercel --confirm --token ${{ secrets.VERCEL_TOKEN }} --prod
+      env:
+        VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
