@@ -10,10 +10,3 @@ name = st.text_input("Enter your name", "Guest")
 
 # Display a welcome message
 st.write(f"Hello, {name}! Welcome to Streamlit!")
-
-# Generate and display a random chart
-data = pd.DataFrame(
-    np.random.randn(50, 3),
-    columns=["A", "B", "C"]
-)
-st.line_chart(data)
