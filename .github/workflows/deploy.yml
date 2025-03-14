@@ -37,7 +37,7 @@ jobs:
       id: create-project
       run: |
         # Create new project and capture the project ID
-        PROJECT_ID=$(vercel project add "${{ steps.project-name.outputs.name }}" --token ${{ secrets.VERCEL_TOKEN }} --scope ${{ secrets.VERCEL_ORG_ID }} --yes)
+        PROJECT_ID=$(vercel project add "${{ steps.project-name.outputs.name }}" --token ${{ secrets.VERCEL_TOKEN }} --scope ${{ secrets.VERCEL_ORG_ID }})
         echo "id=$PROJECT_ID" >> $GITHUB_OUTPUT
     
     - name: Create vercel.json
