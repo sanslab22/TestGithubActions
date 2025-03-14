@@ -1,38 +1,51 @@
-name: Vercel Deploy on Push
-
+name: Deploy to Vercel (New Project)
 on:
   push:
     branches:
-      - vercel-connection-test  # Trigger this workflow on pushes to this branch
-
+      - vercel-connection-test
 jobs:
   deploy:
     runs-on: ubuntu-latest
-
+    
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v2
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v2
-        with:
-          node-version: '16'  # Or whatever Node.js version you use
-
-      - name: Install Vercel CLI
-        run: npm install -g vercel
-
-      - name: Configure Vercel with GitHub Secrets
-        run: |
-          vercel login --token ${{ secrets.VERCEL_TOKEN }}
-          vercel link --org ${{ secrets.VERCEL_ORG_ID }}
-
-      - name: Create Vercel Project (Optional)
-        run: |
-          # Create a new project on Vercel using the Vercel API or CLI
-          PROJECT_NAME="vercel-project-${{ github.sha }}" # You can use a custom name
-          vercel init --confirm --name $PROJECT_NAME
-
-      - name: Deploy to Vercel
-        run: |
-          vercel --token ${{ secrets.VERCEL_TOKEN }} --org ${{ secrets.VERCEL_ORG_ID }} --prod
-
+    - name: Checkout code
+      uses: actions/checkout@v2
+    
+    - name: Set up Node.js
+      uses: actions/setup-node@v2
+      with:
+        node-version: '18'
+    
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.x'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+    
+    - name: Install Vercel CLI
+      run: npm install -g vercel
+    
+    - name: Generate unique project name
+      id: project-name
+      run: echo "name=my-project-$(date +%s)" >> $GITHUB_OUTPUT
+    
+    - name: Create vercel.json with unique name
+      run: |
+        echo '{
+          "name": "${{ steps.project-name.outputs.name }}",
+          "framework": "python"
+        }' > vercel.json
+    
+    - name: Deploy to Vercel (new project)
+      id: deploy
+      run: |
+        # Using --new flag to create a new project
+        DEPLOYMENT_URL=$(vercel --token ${{ secrets.VERCEL_TOKEN }} --scope ${{ secrets.VERCEL_ORG_ID }} --prod --new --name "${{ steps.project-name.outputs.name }}")
+        echo "url=$DEPLOYMENT_URL" >> $GITHUB_OUTPUT
+    
+    - name: Output deployment URL
+      run: echo "Deployed to ${{ steps.deploy.outputs.url }}"
