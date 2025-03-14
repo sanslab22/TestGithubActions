@@ -31,18 +31,26 @@ jobs:
     
     - name: Generate unique project name
       id: project-name
-      run: echo "::set-output name=name::my-project-$(date +%s)"
+      run: echo "name=my-project-$(date +%s)" >> $GITHUB_OUTPUT
     
-    - name: Create and deploy to Vercel
+    - name: Create new Vercel project
+      id: create-project
       run: |
-        # Create a vercel.json file if you don't have one
+        # Create new project and capture the project ID
+        PROJECT_ID=$(vercel project add "${{ steps.project-name.outputs.name }}" --token ${{ secrets.VERCEL_TOKEN }} --scope ${{ secrets.VERCEL_ORG_ID }} --yes)
+        echo "id=$PROJECT_ID" >> $GITHUB_OUTPUT
+    
+    - name: Create vercel.json
+      run: |
         echo '{
           "name": "${{ steps.project-name.outputs.name }}",
           "framework": "python"
         }' > vercel.json
-        
-        # Deploy to Vercel with new project creation
-        vercel --confirm --token ${{ secrets.VERCEL_TOKEN }} --prod
+    
+    - name: Deploy to new Vercel project
+      run: |
+        vercel --yes --token ${{ secrets.VERCEL_TOKEN }} --prod
       env:
         VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
         VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+        VERCEL_PROJECT_ID: ${{ steps.create-project.outputs.id }}
