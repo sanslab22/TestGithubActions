@@ -33,24 +33,19 @@ jobs:
       id: project-name
       run: echo "name=my-project-$(date +%s)" >> $GITHUB_OUTPUT
     
-    - name: Create new Vercel project
-      id: create-project
-      run: |
-        # Create new project and capture the project ID
-        PROJECT_ID=$(vercel project add "${{ steps.project-name.outputs.name }}" --token ${{ secrets.VERCEL_TOKEN }} --scope ${{ secrets.VERCEL_ORG_ID }})
-        echo "id=$PROJECT_ID" >> $GITHUB_OUTPUT
-    
-    - name: Create vercel.json
+    - name: Create vercel.json with unique name
       run: |
         echo '{
           "name": "${{ steps.project-name.outputs.name }}",
           "framework": "python"
         }' > vercel.json
     
-    - name: Deploy to new Vercel project
+    - name: Deploy to Vercel (new project)
+      id: deploy
       run: |
-        vercel --yes --token ${{ secrets.VERCEL_TOKEN }} --prod
-      env:
-        VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-        VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-        VERCEL_PROJECT_ID: ${{ steps.create-project.outputs.id }}
+        # Using --new flag to create a new project
+        DEPLOYMENT_URL=$(vercel --token ${{ secrets.VERCEL_TOKEN }} --scope ${{ secrets.VERCEL_ORG_ID }} --prod --new --name "${{ steps.project-name.outputs.name }}")
+        echo "url=$DEPLOYMENT_URL" >> $GITHUB_OUTPUT
+    
+    - name: Output deployment URL
+      run: echo "Deployed to ${{ steps.deploy.outputs.url }}"
