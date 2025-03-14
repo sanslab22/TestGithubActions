@@ -38,7 +38,7 @@ jobs:
         # Create a vercel.json file if you don't have one
         echo '{
           "name": "${{ steps.project-name.outputs.name }}",
-          "framework": "python"  # or your specific framework
+          "framework": "python"
         }' > vercel.json
         
         # Deploy to Vercel with new project creation
