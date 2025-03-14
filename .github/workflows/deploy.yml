@@ -10,39 +10,44 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # Step 1: Checkout the code
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Install Node.js
+      # Step 2: Set up Node.js
+      - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '18'
 
+      # Step 3: Install Vercel CLI
       - name: Install Vercel CLI
         run: npm install -g vercel
 
-      - name: Create new Vercel project
-        id: create-project
-        env:
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-        run: |
-          response=$(curl -X POST https://api.vercel.com/v9/projects \
-            -H "Authorization: Bearer $VERCEL_TOKEN" \
-            -H "Content-Type: application/json" \
-            -d "{
-              \"name\": \"${GITHUB_REPOSITORY}-$(date +%s)\",
-              \"framework\": \"nextjs\",
-              \"orgId\": \"$VERCEL_ORG_ID\"
-            }")
-          echo $response
-          project_id=$(echo $response | jq -r '.id')
-          echo "project_id=$project_id" >> $GITHUB_ENV
-
+      # Step 4: Deploy to Vercel with error handling
       - name: Deploy to Vercel
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-          PROJECT_ID: ${{ env.project_id }}
-        run: vercel --prod --token $VERCEL_TOKEN --confirm --project $PROJECT_ID
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+        run: |
+          # Ensure all required environment variables are set
+          if [ -z "$VERCEL_TOKEN" ] || [ -z "$VERCEL_PROJECT_ID" ] || [ -z "$VERCEL_ORG_ID" ]; then
+            echo "Error: Missing required environment variables. Please ensure VERCEL_TOKEN, VERCEL_PROJECT_ID, and VERCEL_ORG_ID are set in GitHub Secrets."
+            exit 1
+          fi
 
-      
+          # Attempt deployment
+          echo "Deploying to Vercel project ID: $VERCEL_PROJECT_ID"
+          deployment_output=$(vercel --prod --token $VERCEL_TOKEN --confirm --project-id $VERCEL_PROJECT_ID 2>&1)
+
+          # Capture exit code and handle errors
+          exit_code=$?
+          if [ $exit_code -ne 0 ]; then
+            echo "Deployment failed with the following error:"
+            echo "$deployment_output"
+            exit $exit_code
+          fi
+
+          # Log success message
+          echo "Deployment to Vercel was successful!"
