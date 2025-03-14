@@ -2,6 +2,15 @@ import streamlit as st
 import numpy as np
 import matplotlib.pyplot as plt
 
+import os
+
+if 'PORT' in os.environ:
+    port = int(os.environ['PORT'])
+    os.system(f"streamlit run app.py --server.port {port} --server.address 0.0.0.0")
+else:
+    os.system("streamlit run app.py")
+
+
 # Title of the app
 st.title("Simple Streamlit Demo App")
 
