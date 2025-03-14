@@ -1,6 +1,5 @@
 import streamlit as st
-import pandas as pd
-import numpy as np
+
 
 # Set the title of the app
 st.title("My First Streamlit App")
