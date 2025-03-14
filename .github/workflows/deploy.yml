@@ -1,53 +1,30 @@
 name: Deploy to Vercel
-
 on:
   push:
     branches:
       - vercel-connection-test
-
+  pull_request:
+    branches:
+      - vercel-connection-test
 jobs:
   deploy:
     runs-on: ubuntu-latest
-
+    
     steps:
-      # Step 1: Checkout the code
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      # Step 2: Set up Node.js
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '18'
-
-      # Step 3: Install Vercel CLI
-      - name: Install Vercel CLI
-        run: npm install -g vercel
-
-      # Step 4: Deploy to Vercel with error handling
-      - name: Deploy to Vercel
-        env:
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-        run: |
-          # Ensure all required environment variables are set
-          if [ -z "$VERCEL_TOKEN" ] || [ -z "$VERCEL_PROJECT_ID" ] || [ -z "$VERCEL_ORG_ID" ]; then
-            echo "Error: Missing required environment variables. Please ensure VERCEL_TOKEN, VERCEL_PROJECT_ID, and VERCEL_ORG_ID are set in GitHub Secrets."
-            exit 1
-          fi
-
-          # Attempt deployment
-          echo "Deploying to Vercel project ID: $VERCEL_PROJECT_ID"
-          deployment_output=$(vercel --prod --token $VERCEL_TOKEN --confirm --project-id $VERCEL_PROJECT_ID 2>&1)
-
-          # Capture exit code and handle errors
-          exit_code=$?
-          if [ $exit_code -ne 0 ]; then
-            echo "Deployment failed with the following error:"
-            echo "$deployment_output"
-            exit $exit_code
-          fi
-
-          # Log success message
-          echo "Deployment to Vercel was successful!"
+    - name: Checkout code
+      uses: actions/checkout@v2
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.x'
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+    - name: Deploy to Vercel
+      uses: amondnet/vercel-action@v20
+      with:
+        vercel-token: ${{ secrets.VERCEL_TOKEN }}
+        vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+        vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+        vercel-args: '--prod'  # Add this line to deploy to production
